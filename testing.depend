@@ -1,0 +1,14 @@
+# depslib dependency file v1.0
+1526553719 source:d:\d documents\c++ files\virtual joystick\testing\main.cpp
+	<iostream>
+	<string>
+	<windows.h>
+	"public.h"
+	"vjoyinterface.h"
+
+1526474451 d:\d documents\c++ files\virtual joystick\testing\public.h
+	"PPJIoctl.h"
+	<INITGUID.H>
+
+1526466770 d:\d documents\c++ files\virtual joystick\testing\vjoyinterface.h
+
