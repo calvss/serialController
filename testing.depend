@@ -12,3 +12,19 @@
 
 1526466770 d:\d documents\c++ files\virtual joystick\testing\vjoyinterface.h
 
+1526622258 source:d:\d documents\git\serialcontroller\main.cpp
+	<iostream>
+	<string>
+	<thread>
+	<future>
+	<mutex>
+	<windows.h>
+	"public.h"
+	"vjoyinterface.h"
+
+1526474451 d:\d documents\git\serialcontroller\public.h
+	"PPJIoctl.h"
+	<INITGUID.H>
+
+1526466770 d:\d documents\git\serialcontroller\vjoyinterface.h
+

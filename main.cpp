@@ -1,5 +1,8 @@
 #include<iostream>
 #include<string>
+#include<thread>
+#include<future>
+#include<mutex>
 #include<windows.h>
 #include"public.h"
 #include"vjoyinterface.h"
@@ -7,15 +10,51 @@
 using std::cout;
 using std::endl;
 
-int main(char argc, char *argv[])
+std::mutex mtx;
+
+volatile bool global_quit = false;
+volatile long global_padButtons = 0;
+
+void keyboardHandler()
 {
-    unsigned int DevID;
+    bool continueLoop = true;
+    long requestedButtons = 0;
+    std::string userInput;
+
+    while(continueLoop)
+    {
+        requestedButtons = 0;
+        std::cin>>userInput;
+
+        if(userInput == "quit")
+        {
+            continueLoop = false;
+        }
+        else
+        {
+            if(userInput.find('w') != std::string::npos)
+                requestedButtons |= 0b00000000000000000001000000000000;
+            if(userInput.find('s') != std::string::npos)
+                requestedButtons |= 0b00000000000000000010000000000000;
+            if(userInput.find('a') != std::string::npos)
+                requestedButtons |= 0b00000000000000000100000000000000;
+            if(userInput.find('d') != std::string::npos)
+                requestedButtons |= 0b00000000000000001000000000000000;
+        }
+
+        mtx.lock();
+        global_quit = !continueLoop;
+        global_padButtons = requestedButtons;
+        mtx.unlock();
+    }
+}
+
+int gamepadHandler(unsigned int DevID = 1)
+{
+    bool continueLoop = true;
+
     JOYSTICK_POSITION_V2 padPosition;
     void *ppadPosition;
-
-//interpreting command line arguments******************************************
-    if (argc>1)
-		DevID = atoi(argv[1]);
 
 //Testing if VJoy Driver is installed******************************************
     if(vJoyEnabled())
@@ -33,7 +72,7 @@ int main(char argc, char *argv[])
 
     cout<<"\n";
 
-//Testing if VJoy Driver is correct version with DLL***************************
+//Testing if VJoy Driver is same version with DLL******************************
     unsigned short VerDll, VerDrv;
     if (DriverMatch(&VerDll, &VerDrv))
     {
@@ -79,25 +118,15 @@ VjdStat status = GetVJDStatus(DevID);
     }
 
 //Main Loop********************************************************************
-    while (1)
+
+long buttonSetting = 0b00000000000000000000000000000000;
+padPosition.lButtons = buttonSetting;//32 bit number, 32 pad buttons
+
+    while(continueLoop)
 	{
-		// Set destenition vJoy device
+		// Set destination vJoy device
 		padPosition.bDevice = (BYTE)DevID;
-
-		/*
-		// Set position data of 3 first axes
-		if (Z>35000) Z=0;
-		Z += 200;
-		padPosition.wAxisZ = Z;
-		padPosition.wAxisX = 32000-Z;
-		padPosition.wAxisY = Z/2+7000;
-
-		// Set position data of first 8 buttons
-		Btns = 1<<(Z/4000);
-		padPosition.lButtons = Btns;
-		*/
-
-		padPosition.lButtons = ~padPosition.lButtons;
+        padPosition.lButtons = buttonSetting;
 
 		// Send position data to vJoy device
 		ppadPosition = static_cast<void*>(&padPosition);
@@ -107,9 +136,31 @@ VjdStat status = GetVJDStatus(DevID);
 			std::cin.get();
 			AcquireVJD(DevID);
 		}
-		Sleep(500);
+
+		if(mtx.try_lock())//try to lock the mutex. if unable to lock, it's fine to go around 1 more loop iteration.
+        {
+            buttonSetting = global_padButtons;
+            continueLoop = !global_quit;
+            mtx.unlock();
+        }
+
+		Sleep(10);
 	}
 
+    cout<<"Relinquishing device "<<DevID;
     RelinquishVJD(DevID);
     return 0;
+}
+
+int main(char argc, char *argv[])
+{
+    unsigned int deviceID = 1; //default to 1 if unspecified
+    if(argc > 1)
+        deviceID = atoi(argv[1]);
+
+    auto keyboard = std::thread(keyboardHandler);
+    auto gamepad = std::async(gamepadHandler, deviceID);
+
+    keyboard.detach();
+    return gamepad.get();
 }
