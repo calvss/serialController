@@ -4,6 +4,7 @@
 #include<future>
 #include<mutex>
 #include<windows.h>
+#include"ArduinoSerial.h"
 #include"public.h"
 #include"vjoyinterface.h"
 
@@ -14,6 +15,21 @@ std::mutex mtx;
 
 volatile bool global_quit = false;
 volatile long global_padButtons = 0;
+
+long stringToButtons(std::string inputString)
+{
+    long buttonCode = 0;
+    if(inputString.find('w') != std::string::npos)
+        buttonCode |= 0b00000000000000000001000000000000;
+    if(inputString.find('s') != std::string::npos)
+        buttonCode |= 0b00000000000000000010000000000000;
+    if(inputString.find('a') != std::string::npos)
+        buttonCode |= 0b00000000000000000100000000000000;
+    if(inputString.find('d') != std::string::npos)
+        buttonCode |= 0b00000000000000001000000000000000;
+
+    return buttonCode;
+}
 
 void keyboardHandler()
 {
@@ -27,26 +43,46 @@ void keyboardHandler()
         std::cin>>userInput;
 
         if(userInput == "quit")
-        {
             continueLoop = false;
-        }
         else
-        {
-            if(userInput.find('w') != std::string::npos)
-                requestedButtons |= 0b00000000000000000001000000000000;
-            if(userInput.find('s') != std::string::npos)
-                requestedButtons |= 0b00000000000000000010000000000000;
-            if(userInput.find('a') != std::string::npos)
-                requestedButtons |= 0b00000000000000000100000000000000;
-            if(userInput.find('d') != std::string::npos)
-                requestedButtons |= 0b00000000000000001000000000000000;
-        }
+            requestedButtons = stringToButtons(userInput);
 
         mtx.lock();
         global_quit = !continueLoop;
         global_padButtons = requestedButtons;
         mtx.unlock();
     }
+    return;
+}
+
+void serialHandler()
+{
+    std::string comNumber = "COM3";
+    std::string fullName = "\\\\.\\" + comNumber;
+
+    Serial* SP = new Serial(fullName.c_str());    // adjust as needed
+
+    if (SP->IsConnected())
+		cout<<"Connected to serial on " + comNumber<<endl;
+
+    char incomingData[256] = "";
+    int dataLength = 255;
+    int readResult = 0;
+
+    while(SP->IsConnected())
+	{
+		readResult = SP->ReadData(incomingData,dataLength);
+		// printf("Bytes read: (0 means no data available) %i\n",readResult);
+        incomingData[readResult] = 0;
+        cout<<incomingData;
+
+        mtx.lock();
+        global_padButtons = stringToButtons(std::string(incomingData));
+        mtx.unlock();
+
+		Sleep(10);
+	}
+	return;
 }
 
 int gamepadHandler(unsigned int DevID = 1)
@@ -152,15 +188,17 @@ padPosition.lButtons = buttonSetting;//32 bit number, 32 pad buttons
     return 0;
 }
 
-int main(char argc, char *argv[])
+int main(int argc, char *argv[])
 {
     unsigned int deviceID = 1; //default to 1 if unspecified
     if(argc > 1)
         deviceID = atoi(argv[1]);
 
     auto keyboard = std::thread(keyboardHandler);
+    auto serial = std::thread(serialHandler);
     auto gamepad = std::async(gamepadHandler, deviceID);
 
     keyboard.detach();
+    serial.detach();
     return gamepad.get();
 }

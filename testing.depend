@@ -12,13 +12,14 @@
 
 1526466770 d:\d documents\c++ files\virtual joystick\testing\vjoyinterface.h
 
-1526622258 source:d:\d documents\git\serialcontroller\main.cpp
+1526627621 source:d:\d documents\git\serialcontroller\main.cpp
 	<iostream>
 	<string>
 	<thread>
 	<future>
 	<mutex>
 	<windows.h>
+	"ArduinoSerial.h"
 	"public.h"
 	"vjoyinterface.h"
 
@@ -27,4 +28,12 @@
 	<INITGUID.H>
 
 1526466770 d:\d documents\git\serialcontroller\vjoyinterface.h
+
+1526611007 source:d:\d documents\git\serialcontroller\arduinoserial.cpp
+	"ArduinoSerial.h"
+
+1526610957 d:\d documents\git\serialcontroller\arduinoserial.h
+	<windows.h>
+	<stdio.h>
+	<stdlib.h>
 
