@@ -1,2 +1,2 @@
 # serialController
-uses vjoystick library for virtual gamepad controlled through serial port
+uses vjoystick library for virtual gamepad controlled through arduino serial port
