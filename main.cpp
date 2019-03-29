@@ -64,7 +64,6 @@ void serialHandler()
 
     if (SP->IsConnected())
 		cout<<"Connected to serial on " + comNumber<<endl;
-
     char incomingData[256] = "";
     int dataLength = 255;
     int readResult = 0;
@@ -121,7 +120,7 @@ int gamepadHandler(unsigned int DevID = 1)
     }
 
 //Checking virtual device status***********************************************
-VjdStat status = GetVJDStatus(DevID);
+    VjdStat status = GetVJDStatus(DevID);
 
 	switch (status)
 	{
@@ -155,8 +154,8 @@ VjdStat status = GetVJDStatus(DevID);
 
 //Main Loop********************************************************************
 
-long buttonSetting = 0b00000000000000000000000000000000;
-padPosition.lButtons = buttonSetting;//32 bit number, 32 pad buttons
+    long buttonSetting = 0b00000000000000000000000000000000;
+    padPosition.lButtons = buttonSetting;//32 bit number, 32 pad buttons
 
     while(continueLoop)
 	{

@@ -38,7 +38,6 @@
 		<Unit filename="ArduinoSerial.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="public.h" />
-		<Unit filename="vJoyInterface.dll" />
 		<Unit filename="vjoyinterface.h" />
 		<Extensions>
 			<code_completion />
